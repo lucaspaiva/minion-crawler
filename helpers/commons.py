@@ -219,3 +219,22 @@ def limpieza_barras_por_espacios(x):
     while x.find('  ') >= 0:
         x = x.replace('  ', ' ')
     return x
+
+def save_csv(path,file_name,list_data,header_columns=""):
+    """
+    Guarda un archivo CSV en disco
+    
+    Params:
+        path: directorio donde se guarda el archivo
+        file_name: nombre de archivo
+        list_data: lista con los datos a grabar
+        list_data_header_columns: (opcional) cabecera de columnas 
+    """     
+    myfile = open(os.path.join(path, file_name), 'wb')
+    wr = csv.writer(myfile, delimiter='|', quotechar='"', quoting=csv.QUOTE_ALL)
+
+    if len(header_columns) > 0:
+        wr.writerows(header_columns)
+
+    wr.writerows(list_data)
+    myfile.close()

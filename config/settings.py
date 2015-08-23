@@ -4,6 +4,9 @@
 import os
 import sys
 
+#Directorio donde se guardan los archivos CSV con el output del crawler
+dir_path_csv = os.getcwd() + "/public/csvs"
+
 #---------------------------------------------------------------------------------------------------------------
 #SETEOS GENERICOS PARA LAS CONSULTAS XPATH
 # config de expresiones xpath para parsear los datos necesarios, en caso de cambiar el layout

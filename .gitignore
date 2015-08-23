@@ -57,4 +57,4 @@ docs/_build/
 target/
 
 # Carpetas especificas
-htmls/
+# public/csvs/*

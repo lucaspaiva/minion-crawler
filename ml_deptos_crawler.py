@@ -19,6 +19,7 @@ import sys
 import glob
 from lxml import etree
 import lxml.html
+import csv
 
 #Propios
 from classes.connection import Connection
@@ -28,6 +29,7 @@ import helpers.commons as commons
 import helpers.cleaner as cleaner
 import config.settings as settings
 #from helpers.mail import *
+
 
 #VARS
 #resultados = []
@@ -41,7 +43,8 @@ import config.settings as settings
 articles = []
 method_type = "post"
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'}
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD"
+url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
+url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
 
 #TODO: Que son estos flags?
 x = 1
@@ -130,17 +133,15 @@ while True:
     ##################################################
 
     next_page = Parser.st_get_items(html_source,settings.xpath_query["next_page"])  
-    next_page = next_page[0]
-    
-    commons.print_f(">> Proxima pagina: ")    
-    commons.print_f(">> " + next_page)    
-    commons.print_f(">> ")    
-    commons.print_f(">> ")    
+    if len(next_page) != 0:
+        next_page = next_page[0]
+    else:    
+        next_page = 0
 
     x += 1
 
     #Si no hay mas paginas viene en None, entonces salgo
-    if next_page == None:   
+    if next_page == 0:   
         last_page = True
         commons.print_f(">> Fin paginacion")    
     else:
@@ -149,15 +150,28 @@ while True:
     if last_page:
         break
 
+    commons.print_f(">> Proxima pagina: ")    
+    commons.print_f(">> " + next_page)    
+    commons.print_f(">> ")    
+    commons.print_f(">> ")    
+
 
 print " "
 print "> Grabo archivo"   
+
+file_name = "results_ml_deptos_duenos.csv"
+header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Telefono","Link"]]
+
+commons.save_csv(settings.dir_path_csv,file_name,articles,header_columns)
+
+"""
 f= open('results_ml_deptos_duenos.csv', 'wb')   
 file = csv.writer(f, delimiter='|', quotechar='"', quoting=csv.QUOTE_ALL)
 header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Telefono","Link"]]
 file.writerows(header_columns)
 file.writerows(articles)
 f.close()        
+"""
 
 #END PROCESS
 #---------------------------------------------------------------------------------------------------------------
