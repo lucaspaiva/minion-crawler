@@ -41,10 +41,10 @@ import config.settings as settings
 #end=100
 
 articles = []
-method_type = "post"
+method_type = "get"
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'}
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
+#Deptos en venta dueno
+url_seed = "http://capitalfederal.olx.com.ar/nf/departamentos-casas-en-venta-cat-367/due%C3%B1o/-flo_apartaments"
 
 #TODO: Que son estos flags?
 x = 1
@@ -55,7 +55,7 @@ n = 1
 
 #---------------------------------------------------------------------------------------------------------------
 #BEGIN PROCESS
-commons.print_f(">>>> INICIO PROCESO CRAWLING")
+commons.print_f(">>>> INICIO PROCESO CRAWLING OLX")
 
 #Proceso de Crawling
 while True:
@@ -77,8 +77,7 @@ while True:
     #Aca ejecuto el crawling de la pagina
     ##################################################
     #Comienzo el parseo, extraigo el html del listado 
-    #items = html.xpath(".//li[@class='list-view-item rowItem']")
-    items = Parser.st_get_items(html_source,settings.xpath_query["ML"]["item_list"])
+    items = Parser.st_get_items(html_source,settings.xpath_query["OLX"]["item_list"])
 
     commons.print_f(">> Extraccion de datos ...")
     for index, item in enumerate(items):
@@ -87,25 +86,28 @@ while True:
         item = Parser(item)
 
         #extraigo datos
-        title = item.parse(settings.xpath_query["ML"]["item_title"])
-        description = item.parse(settings.xpath_query["ML"]["item_description"])
-        price = item.parse(settings.xpath_query["ML"]["item_price"])
-        location = item.parse(settings.xpath_query["ML"]["item_location"])
-        link = item.parse(settings.xpath_query["ML"]["item_link"])
-        sup = item.parse(settings.xpath_query["ML"]["item_sup"])
-        amb = item.parse(settings.xpath_query["ML"]["item_amb"])
+        title = item.parse(settings.xpath_query["OLX"]["item_title"])
+        description = item.parse(settings.xpath_query["OLX"]["item_description"])
+        description = description.strip()
+        price = item.parse(settings.xpath_query["OLX"]["item_price"])
+        link = item.parse(settings.xpath_query["OLX"]["item_link"])
         
-        #navego link de detalle de inmueble para extraer el telefono
-        link_with_phone = link + "?noIndex=true&showPhones=true"
-        r = Request(link_with_phone,method_type,headers)
+        r = Request(link,method_type,headers)
         html_source_detail = r.get_contents()
         #Convierto en objeto DOM con lxml
         item_detail = etree.HTML(html_source_detail)
         item_detail = Parser(item_detail)
-        phone = item_detail.parse(settings.xpath_query["ML"]["item_phone"])
+        phone = item_detail.parse(settings.xpath_query["OLX"]["item_phone"])
+        location = item_detail.parse(settings.xpath_query["OLX"]["item_location"])
+        sup = item_detail.parse(settings.xpath_query["OLX"]["item_sup"])
+        amb = item_detail.parse(settings.xpath_query["OLX"]["item_amb"])
 
         if phone == None:
             phone = "No informa"
+        if sup == None:
+            sup = "No informa"
+        if amb == None:
+            amb = "No informa"    
 
         commons.print_f(">> Item n: " + str(n) )
         commons.print_f(">> URL: " + link )    
@@ -132,7 +134,7 @@ while True:
 
     ##################################################
 
-    next_page = Parser.st_get_items(html_source,settings.xpath_query["ML"]["next_page"])  
+    next_page = Parser.st_get_items(html_source,settings.xpath_query["OLX"]["next_page"])  
     if len(next_page) != 0:
         next_page = next_page[0]
     else:    
@@ -158,7 +160,7 @@ while True:
 
 commons.print_f(" ")
 commons.print_f("> Grabo archivo")   
-file_name = "results_ml_deptos_duenos.csv"
+file_name = "results_olx_deptos_duenos.csv"
 header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Telefono","Link"]]
 commons.save_csv(settings.dir_path_csv,file_name,articles,header_columns)
 

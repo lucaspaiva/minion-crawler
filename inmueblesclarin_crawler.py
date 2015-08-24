@@ -19,7 +19,6 @@ import sys
 import glob
 from lxml import etree
 import lxml.html
-import csv
 
 #Propios
 from classes.connection import Connection
@@ -33,7 +32,6 @@ import config.settings as settings
 
 #VARS
 #resultados = []
-#id_hoteles = []
 #contador para el orden
 #contador = 1
 #Para insert x lotes
@@ -41,10 +39,11 @@ import config.settings as settings
 #end=100
 
 articles = []
-method_type = "post"
+method_type = "get"
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'}
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
+#Deptos en venta dueno
+url_seed = "http://www.inmuebles.clarin.com/Propiedades/Buscar?sp.Pais=1&sp.af_800=800&sp.af_816=816&sp.af_100000001=100000001&ViewNameResult=VistaGrilla&totalCount=52253&totalPages=2613&sp.af_1015=1015#/sp.CurrentPage=1"
+#url_seed = ""
 
 #TODO: Que son estos flags?
 x = 1
@@ -55,7 +54,7 @@ n = 1
 
 #---------------------------------------------------------------------------------------------------------------
 #BEGIN PROCESS
-commons.print_f(">>>> INICIO PROCESO CRAWLING")
+commons.print_f(">>>> INICIO PROCESO CRAWLING OLX")
 
 #Proceso de Crawling
 while True:
@@ -77,35 +76,49 @@ while True:
     #Aca ejecuto el crawling de la pagina
     ##################################################
     #Comienzo el parseo, extraigo el html del listado 
-    #items = html.xpath(".//li[@class='list-view-item rowItem']")
-    items = Parser.st_get_items(html_source,settings.xpath_query["ML"]["item_list"])
+    items = Parser.st_get_items(html_source,settings.xpath_query["INMCLA"]["item_list"])
 
     commons.print_f(">> Extraccion de datos ...")
     for index, item in enumerate(items):
+
         n+=1
 
         item = Parser(item)
 
         #extraigo datos
-        title = item.parse(settings.xpath_query["ML"]["item_title"])
-        description = item.parse(settings.xpath_query["ML"]["item_description"])
-        price = item.parse(settings.xpath_query["ML"]["item_price"])
-        location = item.parse(settings.xpath_query["ML"]["item_location"])
-        link = item.parse(settings.xpath_query["ML"]["item_link"])
-        sup = item.parse(settings.xpath_query["ML"]["item_sup"])
-        amb = item.parse(settings.xpath_query["ML"]["item_amb"])
-        
-        #navego link de detalle de inmueble para extraer el telefono
-        link_with_phone = link + "?noIndex=true&showPhones=true"
-        r = Request(link_with_phone,method_type,headers)
+        title = item.parse(settings.xpath_query["INMCLA"]["item_title"])
+        description = item.parse(settings.xpath_query["INMCLA"]["item_description"])
+        price = item.parse(settings.xpath_query["INMCLA"]["item_price"])
+        link = item.parse(settings.xpath_query["INMCLA"]["item_link"])
+        link = "http://www.inmuebles.clarin.com" + link
+        r = Request(link,method_type,headers)
         html_source_detail = r.get_contents()
         #Convierto en objeto DOM con lxml
         item_detail = etree.HTML(html_source_detail)
         item_detail = Parser(item_detail)
-        phone = item_detail.parse(settings.xpath_query["ML"]["item_phone"])
+        #phone = item_detail.parse(settings.xpath_query["ARPROP"]["item_phone"])
+        phone = None
+        location = item_detail.parse(settings.xpath_query["INMCLA"]["item_location"])
+        sup = item_detail.parse(settings.xpath_query["INMCLA"]["item_sup"])
+        amb = item_detail.parse(settings.xpath_query["INMCLA"]["item_amb"])
+
 
         if phone == None:
             phone = "No informa"
+        if sup == None:
+            sup = "No informa"
+        if amb == None:
+            amb = "No informa"
+        if description == None:
+            description = "No Informa"
+        if price == None:
+            price = "No Informa"            
+        if title == None:
+            title = "No Informa"     
+
+        sup = sup.strip()
+        amb = amb.strip()
+        description = description.strip()
 
         commons.print_f(">> Item n: " + str(n) )
         commons.print_f(">> URL: " + link )    
@@ -132,9 +145,9 @@ while True:
 
     ##################################################
 
-    next_page = Parser.st_get_items(html_source,settings.xpath_query["ML"]["next_page"])  
+    next_page = Parser.st_get_items(html_source,settings.xpath_query["INMCLA"]["next_page"])  
     if len(next_page) != 0:
-        next_page = next_page[0]
+        next_page = "http://www.inmuebles.clarin.com" + next_page[0] 
     else:    
         next_page = 0
 
@@ -158,7 +171,7 @@ while True:
 
 commons.print_f(" ")
 commons.print_f("> Grabo archivo")   
-file_name = "results_ml_deptos_duenos.csv"
+file_name = "results_inmcla_deptos_duenos.csv"
 header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Telefono","Link"]]
 commons.save_csv(settings.dir_path_csv,file_name,articles,header_columns)
 
