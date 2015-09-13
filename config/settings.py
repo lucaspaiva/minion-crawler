@@ -27,6 +27,7 @@ xpath_query["ML"] = {
 					"item_link"			: ".//h3[@class='list-view-item-title']/a/@href",
 					"item_sup"			: ".//ul[@class='classified-details']/li[1]/text()",
 					"item_amb"			: ".//ul[@class='classified-details']/li[2]/text()",
+					"item_type_op"		: ".//ul[@class='classified-details']/li[3]/text()",
 					"item_phone"		: ".//span[@class='seller-details-box showPhone']/text()",
 					"next_page"			: ".//li[@class='last-child']/a/@href",
 					} 
@@ -95,6 +96,7 @@ db["ec2_pro"] = {
 #VARS
 #Directorio donde se guardan los archivos CSV con el output del crawler
 dir_path_csv = os.getcwd() + "/public/csvs"
+dir_path_htmls = os.getcwd() + "/public/htmls"
 
 #---------------------------------------------------------------------------------------------------------------
 

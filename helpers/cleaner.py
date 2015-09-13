@@ -9,6 +9,12 @@ import sys
 import re
 import HTMLParser
 
+#Cleaner common functions
+def clean_spaces(string):
+	r = string.strip()
+	return r
+
+#Cleaners adhoc functions
 def clean_hotel_id(string):
 	"""
 	"""

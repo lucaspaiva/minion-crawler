@@ -41,14 +41,22 @@ import config.settings as settings
 #end=100
 
 articles = []
+file_name = "2015-09-13_ml_deptos_duenos.csv"
 method_type = "post"
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'}
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
+#url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
+#url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
+#Todo departamentos en venta:
+url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/due%C3%B1o_DisplayType_LF_PrCategId_AD "
+#Todo casas de dueno en venta:
+#url_seed = "http://inmuebles.mercadolibre.com.ar/casas/due%C3%B1o_DisplayType_LF"
+
+
 
 #TODO: Que son estos flags?
 x = 1
-n = 1
+# nro de orden
+n = 0
 #---------------------------------------------------------------------------------------------------------------
 
 
@@ -73,12 +81,21 @@ while True:
     html_source = r.get_contents()
     #Convierto en objeto DOM con lxml
     #html = etree.HTML(html_source)
+    #print "html dom: "
+    #print html_source
+    #print "Grabo archivo"   
+    #archivo = open('public/htmls/pagina1.html', 'wb')   
+    #archivo.write(html_source)
+    #archivo.close()
+    #sys.exit()
 
     #Aca ejecuto el crawling de la pagina
     ##################################################
     #Comienzo el parseo, extraigo el html del listado 
     #items = html.xpath(".//li[@class='list-view-item rowItem']")
     items = Parser.st_get_items(html_source,settings.xpath_query["ML"]["item_list"])
+    #print "Items: ", items
+    #raw_input("Siguiente")
 
     commons.print_f(">> Extraccion de datos ...")
     for index, item in enumerate(items):
@@ -94,6 +111,12 @@ while True:
         link = item.parse(settings.xpath_query["ML"]["item_link"])
         sup = item.parse(settings.xpath_query["ML"]["item_sup"])
         amb = item.parse(settings.xpath_query["ML"]["item_amb"])
+        operation = item.parse(settings.xpath_query["ML"]["item_type_op"])
+        
+
+        title = cleaner.clean_spaces(title)
+        description = cleaner.clean_spaces(description)
+        location = cleaner.clean_spaces(location)
         
         #navego link de detalle de inmueble para extraer el telefono
         link_with_phone = link + "?noIndex=true&showPhones=true"
@@ -104,14 +127,19 @@ while True:
         item_detail = Parser(item_detail)
         phone = item_detail.parse(settings.xpath_query["ML"]["item_phone"])
 
+        #Validaciones extra
         if phone == None:
             phone = "No informa"
+
+        if operation == None:
+            operation = "Ver columna amb."    
 
         commons.print_f(">> Item n: " + str(n) )
         commons.print_f(">> URL: " + link )    
         commons.print_f(">> Titulo: " + title)
         commons.print_f(">> Descripcion: " + description)
         commons.print_f(">> Precio: " + price)
+        commons.print_f(">> Tipo de operacion: " + operation)
         commons.print_f(">> Zona: " + location)
         commons.print_f(">> Superficie: " + sup)
         commons.print_f(">> Ambientes: " + amb)
@@ -126,6 +154,7 @@ while True:
                         location.encode("utf-8"),
                         amb.encode("utf-8"),
                         sup.encode("utf-8"),
+                        operation.encode("utf-8"),
                         phone.encode("utf-8"),
                         link.encode("utf-8")
                         ])
@@ -158,8 +187,7 @@ while True:
 
 commons.print_f(" ")
 commons.print_f("> Grabo archivo")   
-file_name = "results_ml_deptos_duenos.csv"
-header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Telefono","Link"]]
+header_columns = [["Nro","Titulo","Descripcion","Precio","Localidad","Ambientes","Superficie","Tipo Operacion","Telefono","Link"]]
 commons.save_csv(settings.dir_path_csv,file_name,articles,header_columns)
 
 #END PROCESS
