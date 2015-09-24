@@ -41,15 +41,18 @@ import config.settings as settings
 #end=100
 
 articles = []
-file_name = "2015-09-22_ml_deptos_duenos.csv"
+file_name = "2015-09-23_ml_veraneo_duenos.csv"
 method_type = "post"
 headers = {'user-agent': 'Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0'}
 #url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_PrCategId_AD   "
 #url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/capital-federal/due%C3%B1o_DisplayType_LF_ItemTypeID_N_PrCategId_AD "
 #Todo departamentos en venta:
-url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/due%C3%B1o_DisplayType_LF_PrCategId_AD "
+#url_seed = "http://inmuebles.mercadolibre.com.ar/departamentos/due%C3%B1o_DisplayType_LF_PrCategId_AD "
 #Todo casas de dueno en venta:
 #url_seed = "http://inmuebles.mercadolibre.com.ar/casas/due%C3%B1o_DisplayType_LF"
+#Todo alquiler temporario de dueno:
+url_seed = "http://inmuebles.mercadolibre.com.ar/alquiler-temporario/due%C3%B1o_DisplayType_LF"
+
 
 
 
@@ -123,9 +126,12 @@ while True:
         r = Request(link_with_phone,method_type,headers)
         html_source_detail = r.get_contents()
         #Convierto en objeto DOM con lxml
-        item_detail = etree.HTML(html_source_detail)
-        item_detail = Parser(item_detail)
-        phone = item_detail.parse(settings.xpath_query["ML"]["item_phone"])
+        if html_source_detail != "":
+            item_detail = etree.HTML(html_source_detail)
+            item_detail = Parser(item_detail)
+            phone = item_detail.parse(settings.xpath_query["ML"]["item_phone"])
+        else:
+            phone = "Error en request"    
 
         #Validaciones extra
         if phone == None:
@@ -133,6 +139,9 @@ while True:
 
         if operation == None:
             operation = "Ver columna amb."    
+
+        if amb == None:
+            amb = "-"    
 
         commons.print_f(">> Item n: " + str(n) )
         commons.print_f(">> URL: " + link )    
